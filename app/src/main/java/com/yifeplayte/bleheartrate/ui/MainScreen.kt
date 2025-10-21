@@ -1,5 +1,6 @@
 package com.yifeplayte.bleheartrate.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +19,40 @@ import com.yifeplayte.bleheartrate.model.BluetoothDeviceInfo
 import com.yifeplayte.bleheartrate.model.ConnectionState
 import com.yifeplayte.bleheartrate.model.DisplayMode
 import com.yifeplayte.bleheartrate.model.HeartRateData
+
+@Composable
+fun PipScreen(heartRate: Int) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Favorite,
+                contentDescription = "Heart Rate",
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = if (heartRate > 0) "$heartRate" else "--",
+                fontSize = 48.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+            Text(
+                text = "BPM",
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

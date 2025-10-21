@@ -67,6 +67,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             viewModelScope.launch {
                 heartRateService?.connectionState?.collect { state ->
                     _connectionState.value = state
+                    
+                    // Auto-reconnect logic
+                    if (state == ConnectionState.DISCONNECTED && 
+                        _autoReconnect.value && 
+                        _selectedDevice.value != null &&
+                        _isServiceRunning.value) {
+                        // Wait a bit before reconnecting
+                        kotlinx.coroutines.delay(2000)
+                        if (_connectionState.value == ConnectionState.DISCONNECTED) {
+                            connectToDevice()
+                        }
+                    }
                 }
             }
         }

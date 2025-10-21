@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -16,10 +17,17 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.yifeplayte.bleheartrate.model.DisplayMode
 import com.yifeplayte.bleheartrate.service.FloatingWindowService
 import com.yifeplayte.bleheartrate.ui.MainScreen
@@ -45,6 +53,11 @@ class MainActivity : ComponentActivity() {
         
         setContent {
             BleHeartrateTheme {
+                val configuration = LocalConfiguration.current
+                val isInPipMode = remember(configuration) {
+                    isInPictureInPictureMode
+                }
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -57,7 +70,20 @@ class MainActivity : ComponentActivity() {
                     val pairedDevices by viewModel.pairedDevices.collectAsState()
                     val selectedDevice by viewModel.selectedDevice.collectAsState()
 
-                    MainScreen(
+                    // Update floating window when heart rate changes
+                    LaunchedEffect(heartRateData, displayMode, isServiceRunning) {
+                        if (isServiceRunning && displayMode == DisplayMode.FLOATING_WINDOW) {
+                            updateFloatingWindow(heartRateData.heartRate)
+                        }
+                    }
+
+                    if (isInPipMode) {
+                        // Simple PiP UI showing only heart rate
+                        com.yifeplayte.bleheartrate.ui.PipScreen(
+                            heartRate = heartRateData.heartRate
+                        )
+                    } else {
+                        MainScreen(
                         isServiceRunning = isServiceRunning,
                         heartRateData = heartRateData,
                         connectionState = connectionState,
@@ -85,7 +111,8 @@ class MainActivity : ComponentActivity() {
                         onConnectDevice = { viewModel.connectToDevice() },
                         onDisconnectDevice = { viewModel.disconnectDevice() },
                         onUnpairDevice = { viewModel.unpairDevice(it) }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -137,6 +164,14 @@ class MainActivity : ComponentActivity() {
     private fun stopFloatingWindowService() {
         val intent = Intent(this, FloatingWindowService::class.java)
         stopService(intent)
+    }
+
+    private fun updateFloatingWindow(heartRate: Int) {
+        val intent = Intent(this, FloatingWindowService::class.java).apply {
+            action = FloatingWindowService.ACTION_UPDATE_HEART_RATE
+            putExtra(FloatingWindowService.EXTRA_HEART_RATE, heartRate)
+        }
+        startService(intent)
     }
 
     private fun enterPipMode() {
@@ -211,5 +246,13 @@ class MainActivity : ComponentActivity() {
             viewModel.displayMode.value == DisplayMode.PICTURE_IN_PICTURE) {
             enterPipMode()
         }
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        // The UI will automatically update due to configuration change
     }
 }
