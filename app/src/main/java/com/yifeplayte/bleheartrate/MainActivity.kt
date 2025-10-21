@@ -177,7 +177,7 @@ class MainActivity : ComponentActivity() {
     private fun enterPipMode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val params = PictureInPictureParams.Builder()
-                .setAspectRatio(Rational(1, 1))
+                .setAspectRatio(Rational(2, 1))
                 .build()
             enterPictureInPictureMode(params)
         }
