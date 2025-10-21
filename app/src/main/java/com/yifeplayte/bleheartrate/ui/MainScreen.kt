@@ -245,6 +245,7 @@ fun ServiceControlSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayModeSection(
     displayMode: DisplayMode,
@@ -402,6 +403,7 @@ fun AutoReconnectSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeviceSelectionDialog(
     devices: List<BluetoothDeviceInfo>,
